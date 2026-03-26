@@ -12,7 +12,6 @@ body {
     background: linear-gradient(135deg, #eef2ff, #f8fafc);
 }
 
-/* HEADER */
 .header {
     text-align: center;
     padding: 30px;
@@ -26,24 +25,19 @@ body {
     -webkit-text-fill-color: transparent;
 }
 
-/* MAIN */
 .container {
     display: flex;
     padding: 20px;
     gap: 20px;
 }
 
-/* LEFT PANEL */
 .left {
     flex: 2;
     background: rgba(255,255,255,0.9);
-    backdrop-filter: blur(10px);
     padding: 25px;
     border-radius: 16px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
 
-/* INPUT */
 .input-box {
     display: flex;
     gap: 10px;
@@ -54,13 +48,6 @@ body {
     padding: 14px;
     border-radius: 10px;
     border: 1px solid #ddd;
-    outline: none;
-    transition: 0.2s;
-}
-
-.input-box input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
 }
 
 .input-box button {
@@ -70,15 +57,8 @@ body {
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    transition: 0.3s;
 }
 
-.input-box button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(59,130,246,0.3);
-}
-
-/* GRID */
 .grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -98,53 +78,37 @@ body {
 
 .card:hover {
     background: #eff6ff;
-    transform: translateY(-4px) scale(1.02);
-    border-color: #3b82f6;
 }
 
-/* RIGHT PANEL */
+.card.active {
+    background: #3b82f6;
+    color: white;
+}
+
 .right {
     flex: 1;
     text-align: center;
 }
 
-/* QR BOX */
 .qr-box {
-    background: rgba(255,255,255,0.9);
+    background: white;
     padding: 30px;
     border-radius: 16px;
     border: 2px dashed #d1d5db;
-    backdrop-filter: blur(10px);
 }
 
 .qr-box img {
     width: 200px;
 }
 
-/* DOWNLOAD BUTTON */
 .download {
     margin-top: 15px;
     padding: 14px;
     width: 100%;
     border-radius: 10px;
     border: none;
-    font-size: 15px;
-    background: linear-gradient(90deg, #3b82f6, #6366f1);
+    background: #6366f1;
     color: white;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.download:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(99,102,241,0.4);
-}
-
-/* RESPONSIVE */
-@media(max-width: 900px) {
-    .container {
-        flex-direction: column;
-    }
 }
 </style>
 </head>
@@ -152,45 +116,31 @@ body {
 <body>
 
 <div class="header">
-    <span>Create beautiful QR codes in seconds</span>
+    <span>Create QR codes</span>
 </div>
 
 <div class="container">
 
-<!-- LEFT -->
 <div class="left">
 
 <form method="POST">
-    <div class="input-box">
-        <input type="text" name="data" placeholder="Enter URL or text..." required>
+    <div id="dynamic-input" class="input-box">
+        <input type="text" name="data" placeholder="Enter text..." required>
         <button type="submit">Generate</button>
     </div>
 </form>
 
-<h3 style="margin-top:20px;">Choose QR type</h3>
+<h3>Choose QR type</h3>
 
 <div class="grid">
-    <div class="card">📄 PDF</div>
-    <div class="card">🔗 Links</div>
-    <div class="card">👤 vCard</div>
-    <div class="card">🏢 Business</div>
-    <div class="card">🎥 Video</div>
-    <div class="card">🖼️ Images</div>
-    <div class="card">📘 Facebook</div>
-    <div class="card">📷 Instagram</div>
-    <div class="card">🌐 Social</div>
-    <div class="card">💬 WhatsApp</div>
-    <div class="card">🎵 MP3</div>
-    <div class="card">📱 Apps</div>
-    <div class="card">📋 Menu</div>
-    <div class="card">🎟️ Coupon</div>
-    <div class="card">📶 WiFi</div>
-    <div class="card">🌍 Website</div>
+    <div class="card" onclick="selectType(this,'website')">🌍 Website</div>
+    <div class="card" onclick="selectType(this,'instagram')">📷 Instagram</div>
+    <div class="card" onclick="selectType(this,'whatsapp')">💬 WhatsApp</div>
+    <div class="card" onclick="selectType(this,'wifi')">📶 WiFi</div>
 </div>
 
 </div>
 
-<!-- RIGHT -->
 <div class="right">
 
 <div class="qr-box">
@@ -204,6 +154,59 @@ body {
 </div>
 
 </div>
+
+<script>
+function selectType(element, type) {
+
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    element.classList.add('active');
+
+    let container = document.getElementById("dynamic-input");
+
+    if (type === "website") {
+        container.innerHTML = `
+            <input type="text" name="data" placeholder="Enter Website URL..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "wifi") {
+        container.innerHTML = `
+            <input type="text" name="ssid" placeholder="WiFi Name" required>
+            <input type="text" name="password" placeholder="WiFi Password" required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "whatsapp") {
+        container.innerHTML = `
+            <input type="text" name="phone" placeholder="Enter Phone Number..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "instagram") {
+        container.innerHTML = `
+            <input type="text" name="instagram" placeholder="Enter Instagram Username..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "facebook") {
+        container.innerHTML = `
+            <input type="text" name="facebook" placeholder="Enter Facebook Username..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else {
+        container.innerHTML = `
+            <input type="text" name="data" placeholder="Enter ${type} link..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+}
+</script>
 
 </body>
 </html>
