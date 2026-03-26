@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect
 import os
 import sqlite3
 from PIL import Image, ImageDraw
-
 import qrcode
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.moduledrawers import CircleModuleDrawer, RoundedModuleDrawer
@@ -10,6 +9,8 @@ from qrcode.image.styles.colormasks import SolidFillColorMask
 
 app = Flask(__name__, static_folder="static")
 
+# -------- CONFIG --------
+BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:5000")
 QR_FOLDER = "static/qr_codes"
 LOGO_PATH = "static/logos/logo.png"
 
@@ -56,8 +57,9 @@ def add_logo(qr_path):
 
         qr.paste(logo, pos, logo)
         qr.save(qr_path)
-    except:
-        pass
+
+    except Exception as e:
+        print("Logo Error:", e)
 
 # -------- GENERATE QR --------
 def generate_qr(data, color, bgcolor, frame, style, mode):
@@ -69,21 +71,21 @@ def generate_qr(data, color, bgcolor, frame, style, mode):
     conn.commit()
     conn.close()
 
-    # MODE
+    # -------- MODE --------
     if mode == "track":
-        dynamic_url = f"http://127.0.0.1:5000/qr/{qr_id}"  # change after deploy
+        dynamic_url = f"{BASE_URL}/qr/{qr_id}"
     else:
         dynamic_url = data
 
     file_path = f"{QR_FOLDER}/{qr_id}.png"
 
-    # STYLE
+    # -------- STYLE --------
     if style == "dots":
         drawer = CircleModuleDrawer()
     elif style == "rounded":
         drawer = RoundedModuleDrawer()
     else:
-        drawer = None
+        drawer = RoundedModuleDrawer()
 
     qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H)
     qr.add_data(dynamic_url)
@@ -100,19 +102,22 @@ def generate_qr(data, color, bgcolor, frame, style, mode):
 
     img.save(file_path)
 
+    # Add logo
     add_logo(file_path)
 
+    # Add frame
     img = Image.open(file_path)
     draw = ImageDraw.Draw(img)
 
     if frame == "black":
-        draw.rectangle([0, 0, img.size[0], img.size[1]], outline="black", width=10)
+        draw.rectangle([5, 5, img.size[0]-5, img.size[1]-5], outline="black", width=10)
 
     elif frame == "rounded":
-        draw.rounded_rectangle([0, 0, img.size[0], img.size[1]], radius=40, outline="black", width=10)
+        draw.rounded_rectangle([5, 5, img.size[0]-5, img.size[1]-5], radius=40, outline="black", width=10)
 
     img.save(file_path)
 
+    # Update DB with file path
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
     c.execute("UPDATE qr_codes SET file_path=? WHERE id=?", (file_path, qr_id))
@@ -125,12 +130,18 @@ def generate_qr(data, color, bgcolor, frame, style, mode):
 @app.route("/", methods=["GET", "POST"])
 def index():
     qr_path = None
+    error = None
 
     if request.method == "POST":
         qr_type = request.form.get("type")
         mode = request.form.get("mode")
         value = request.form.get("value")
 
+        if not value:
+            error = "Please enter valid data"
+            return render_template("index.html", qr_path=qr_path, error=error)
+
+        # -------- QR TYPES --------
         if qr_type == "whatsapp":
             data = f"https://wa.me/{value}"
         elif qr_type == "instagram":
@@ -153,7 +164,7 @@ def index():
 
         qr_path = generate_qr(data, color, bgcolor, frame, style, mode)
 
-    return render_template("index.html", qr_path=qr_path)
+    return render_template("index.html", qr_path=qr_path, error=error)
 
 # -------- TRACK --------
 @app.route("/qr/<int:qr_id>")
@@ -171,6 +182,10 @@ def track_qr(qr_id):
         c.execute("UPDATE qr_codes SET scans=? WHERE id=?", (scans, qr_id))
         conn.commit()
         conn.close()
+
+        # Basic safety check
+        if not data.startswith(("http://", "https://", "mailto:", "tel:", "WIFI:", "https://wa.me", "https://instagram.com")):
+            return "Invalid URL"
 
         return redirect(data)
 
