@@ -194,7 +194,7 @@ body {
 <div class="right">
 
 <div class="qr-box">
-    <img src="{{ url_for('static', filename='qr.png') }}">
+    <img src="{{ url_for('static', filename='qr.png') }}?t={{ range(1,10000)|random }}">
 </div>
 
 <a href="/download">
