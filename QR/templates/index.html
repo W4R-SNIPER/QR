@@ -2,16 +2,17 @@
 <html>
 <head>
     <title>QR PRO MAX</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
 </head>
 <body>
 
 <div class="container">
-    <h1>🚀 QR Generator</h1>
+    <h1>🚀 QR Code Generator</h1>
 
     <form method="POST">
 
-        <select name="type">
+        <!-- SELECT TYPE -->
+        <select name="type" id="type" onchange="updateFields()">
             <option value="text">Text</option>
             <option value="whatsapp">WhatsApp</option>
             <option value="instagram">Instagram</option>
@@ -20,42 +21,96 @@
             <option value="wifi">WiFi</option>
         </select>
 
-        <select name="mode">
-            <option value="direct">Direct (Recommended)</option>
-            <option value="track">Tracking (needs deployment)</option>
-        </select>
+        <!-- DYNAMIC INPUT AREA -->
+        <div id="dynamicFields"></div>
 
-        <input type="text" name="value" placeholder="Enter value">
+        <!-- COLOR OPTIONS -->
+        <label>QR Color:</label>
+        <input type="color" name="color" value="#000000">
 
-        <input type="text" name="ssid" placeholder="WiFi Name">
-        <input type="text" name="password" placeholder="WiFi Password">
+        <label>Background:</label>
+        <input type="color" name="bgcolor" value="#ffffff">
 
-        <input type="color" name="color">
-        <input type="color" name="bgcolor">
-
+        <label>Frame:</label>
         <select name="frame">
-            <option value="none">No Frame</option>
+            <option value="none">None</option>
             <option value="black">Black</option>
             <option value="rounded">Rounded</option>
         </select>
 
+        <label>Pattern:</label>
         <select name="style">
             <option value="square">Square</option>
             <option value="dots">Dots</option>
             <option value="rounded">Rounded</option>
         </select>
 
-        <button type="submit">Generate</button>
+        <button type="submit">Generate QR</button>
+
     </form>
 
     {% if qr_path %}
         <h2>Preview</h2>
-        <img src="{{ qr_path }}" width="200">
+        <img id="qrPreview" src="" width="200">
     {% endif %}
 
     <br><br>
-    <a href="/dashboard">Dashboard</a>
+    <a href="/dashboard">📊 Dashboard</a>
 </div>
 
+<script>
+
+function updateFields() {
+    let type = document.getElementById("type").value;
+    let container = document.getElementById("dynamicFields");
+
+    if (type === "text") {
+        container.innerHTML = `<input type="text" name="value" oninput="liveQR()" placeholder="Enter text">`;
+    }
+    else if (type === "whatsapp") {
+        container.innerHTML = `<input type="text" name="value" oninput="liveQR()" placeholder="91XXXXXXXXXX">`;
+    }
+    else if (type === "instagram") {
+        container.innerHTML = `<input type="text" name="value" oninput="liveQR()" placeholder="username">`;
+    }
+    else if (type === "email") {
+        container.innerHTML = `<input type="email" name="value" oninput="liveQR()" placeholder="email">`;
+    }
+    else if (type === "phone") {
+        container.innerHTML = `<input type="text" name="value" oninput="liveQR()" placeholder="phone">`;
+    }
+    else if (type === "wifi") {
+        container.innerHTML = `
+            <input type="text" name="ssid" oninput="liveQR()" placeholder="WiFi Name">
+            <input type="text" name="password" oninput="liveQR()" placeholder="Password">
+        `;
+    }
+}
+
+// 🎨 COLOR
+function setColor(c){ document.getElementById("qrColor").value = c; liveQR(); }
+function setBg(c){ document.getElementById("bgColor").value = c; liveQR(); }
+
+// ⚡ LIVE QR GENERATION
+function liveQR() {
+    let form = document.querySelector("form");
+    let formData = new FormData(form);
+
+    fetch("/generate", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("qrPreview").src = data.qr + "?t=" + new Date().getTime();
+    });
+}
+
+// LOAD DEFAULT
+window.onload = () => {
+    updateFields();
+    liveQR();
+};
+</script>
 </body>
 </html>
