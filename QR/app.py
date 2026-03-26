@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, send_file, redirect, jsonify
 import os
 import sqlite3
 from PIL import Image, ImageDraw
@@ -9,10 +9,14 @@ from qrcode.image.styles.colormasks import SolidFillColorMask
 
 # -------- CONFIG --------
 app = Flask(__name__, static_folder="static")
+
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:5000")
 QR_FOLDER = "static/qr_codes"
+MAIN_QR = "static/qr.png"   # 👈 IMPORTANT for UI
 LOGO_PATH = "static/logos/logo.png"
+
 os.makedirs(QR_FOLDER, exist_ok=True)
+os.makedirs("static", exist_ok=True)
 
 # -------- DATABASE --------
 def init_db():
@@ -41,18 +45,22 @@ def hex_to_rgb(hex_color):
 # -------- ADD LOGO --------
 def add_logo(qr_path):
     try:
+        if not os.path.exists(LOGO_PATH):
+            return
         qr = Image.open(qr_path).convert("RGBA")
         logo = Image.open(LOGO_PATH).convert("RGBA")
         logo = logo.resize((80, 80))
+
         pos = ((qr.size[0] - logo.size[0]) // 2,
                (qr.size[1] - logo.size[1]) // 2)
+
         qr.paste(logo, pos, logo)
         qr.save(qr_path)
     except Exception as e:
         print("Logo error:", e)
 
 # -------- GENERATE QR --------
-def generate_qr(data, color, bgcolor, frame, style, mode):
+def generate_qr(data):
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
     c.execute("INSERT INTO qr_codes (data) VALUES (?)", (data,))
@@ -60,18 +68,10 @@ def generate_qr(data, color, bgcolor, frame, style, mode):
     conn.commit()
     conn.close()
 
-    if mode == "track":
-        dynamic_url = f"{BASE_URL}/qr/{qr_id}"
-    else:
-        dynamic_url = data
+    dynamic_url = f"{BASE_URL}/qr/{qr_id}"
 
-    file_path = f"{QR_FOLDER}/{qr_id}.png"
-
-    drawer = RoundedModuleDrawer()  # default
-    if style == "dots":
-        drawer = CircleModuleDrawer()
-    elif style == "rounded":
-        drawer = RoundedModuleDrawer()
+    # STYLE (simple default)
+    drawer = RoundedModuleDrawer()
 
     qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H)
     qr.add_data(dynamic_url)
@@ -81,94 +81,44 @@ def generate_qr(data, color, bgcolor, frame, style, mode):
         image_factory=StyledPilImage,
         module_drawer=drawer,
         color_mask=SolidFillColorMask(
-            front_color=hex_to_rgb(color),
-            back_color=hex_to_rgb(bgcolor)
+            front_color=(0, 0, 0),
+            back_color=(255, 255, 255)
         )
     )
-    img.save(file_path)
-    add_logo(file_path)
 
-    img = Image.open(file_path)
-    draw = ImageDraw.Draw(img)
-    if frame == "black":
-        draw.rectangle([5, 5, img.size[0]-5, img.size[1]-5], outline="black", width=10)
-    elif frame == "rounded":
-        draw.rounded_rectangle([5, 5, img.size[0]-5, img.size[1]-5],
-                               radius=40, outline="black", width=10)
+    # Save main QR for UI
+    img.save(MAIN_QR)
+
+    # Save unique QR (optional)
+    file_path = f"{QR_FOLDER}/{qr_id}.png"
     img.save(file_path)
 
+    add_logo(MAIN_QR)
+
+    # Update DB
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
     c.execute("UPDATE qr_codes SET file_path=? WHERE id=?", (file_path, qr_id))
     conn.commit()
     conn.close()
 
-    return file_path
+    return MAIN_QR
 
 # -------- HOME --------
 @app.route("/", methods=["GET", "POST"])
-def index():
-    qr_path = None
-    error = None
+def home():
     if request.method == "POST":
-        qr_type = request.form.get("type")
-        mode = request.form.get("mode")
-        value = request.form.get("value")
+        data = request.form.get("data")
 
-        if not value:
-            error = "Please enter valid data"
-            return render_template("index.html", qr_path=qr_path, error=error)
+        if data:
+            generate_qr(data)
 
-        if qr_type == "whatsapp":
-            data = f"https://wa.me/{value}"
-        elif qr_type == "instagram":
-            data = f"https://instagram.com/{value}"
-        elif qr_type == "email":
-            data = f"mailto:{value}"
-        elif qr_type == "phone":
-            data = f"tel:{value}"
-        elif qr_type == "wifi":
-            ssid = request.form.get("ssid")
-            password = request.form.get("password")
-            data = f"WIFI:T:WPA;S:{ssid};P:{password};;"
-        else:
-            data = value
+    return render_template("index.html")
 
-        color = request.form.get("color")
-        bgcolor = request.form.get("bgcolor")
-        frame = request.form.get("frame")
-        style = request.form.get("style")
-
-        qr_path = generate_qr(data, color, bgcolor, frame, style, mode)
-
-    return render_template("index.html", qr_path=qr_path, error=error)
-
-# -------- LIVE AJAX QR --------
-@app.route("/generate", methods=["POST"])
-def generate_live():
-    data_type = request.form.get("type")
-    value = request.form.get("value")
-    ssid = request.form.get("ssid")
-    password = request.form.get("password")
-
-    if data_type == "whatsapp":
-        data = f"https://wa.me/{value}"
-    elif data_type == "instagram":
-        data = f"https://instagram.com/{value}"
-    elif data_type == "email":
-        data = f"mailto:{value}"
-    elif data_type == "phone":
-        data = f"tel:{value}"
-    elif data_type == "wifi":
-        data = f"WIFI:T:WPA;S:{ssid};P:{password};;"
-    else:
-        data = value
-
-    import qrcode
-    img = qrcode.make(data)
-    path = "static/qr_codes/live.png"
-    img.save(path)
-    return jsonify({"qr": "/" + path})
+# -------- DOWNLOAD --------
+@app.route("/download")
+def download():
+    return send_file(MAIN_QR, as_attachment=True)
 
 # -------- TRACK --------
 @app.route("/qr/<int:qr_id>")
@@ -177,6 +127,7 @@ def track_qr(qr_id):
     c = conn.cursor()
     c.execute("SELECT data, scans FROM qr_codes WHERE id=?", (qr_id,))
     result = c.fetchone()
+
     if result:
         data, scans = result
         scans += 1
@@ -184,21 +135,12 @@ def track_qr(qr_id):
         conn.commit()
         conn.close()
 
-        # SECURITY: only allow safe URLs
-        if not data.startswith(("http://","https://","mailto:","tel:","WIFI:","https://wa.me","https://instagram.com")):
+        if not data.startswith(("http://", "https://", "mailto:", "tel:", "WIFI:")):
             return "Invalid URL"
-        return redirect(data)
-    return "QR not found"
 
-# -------- DASHBOARD --------
-@app.route("/dashboard")
-def dashboard():
-    conn = sqlite3.connect("database.db")
-    c = conn.cursor()
-    c.execute("SELECT * FROM qr_codes")
-    data = c.fetchall()
-    conn.close()
-    return render_template("dashboard.html", data=data)
+        return redirect(data)
+
+    return "QR not found"
 
 # -------- RUN --------
 if __name__ == "__main__":
