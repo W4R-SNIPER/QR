@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR PRO MAX</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>🚀 QR Generator</h1>
+
+    <form method="POST">
+
+        <select name="type">
+            <option value="text">Text</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="instagram">Instagram</option>
+            <option value="email">Email</option>
+            <option value="phone">Phone</option>
+            <option value="wifi">WiFi</option>
+        </select>
+
+        <select name="mode">
+            <option value="direct">Direct (Recommended)</option>
+            <option value="track">Tracking (needs deployment)</option>
+        </select>
+
+        <input type="text" name="value" placeholder="Enter value">
+
+        <input type="text" name="ssid" placeholder="WiFi Name">
+        <input type="text" name="password" placeholder="WiFi Password">
+
+        <input type="color" name="color">
+        <input type="color" name="bgcolor">
+
+        <select name="frame">
+            <option value="none">No Frame</option>
+            <option value="black">Black</option>
+            <option value="rounded">Rounded</option>
+        </select>
+
+        <select name="style">
+            <option value="square">Square</option>
+            <option value="dots">Dots</option>
+            <option value="rounded">Rounded</option>
+        </select>
+
+        <button type="submit">Generate</button>
+    </form>
+
+    {% if qr_path %}
+        <h2>Preview</h2>
+        <img src="{{ qr_path }}" width="200">
+    {% endif %}
+
+    <br><br>
+    <a href="/dashboard">Dashboard</a>
+</div>
+
+</body>
+</html>

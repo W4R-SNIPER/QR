@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>📊 QR Dashboard</h1>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Data</th>
+            <th>Scans</th>
+            <th>QR</th>
+        </tr>
+
+        {% for row in data %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[3] }}</td>
+            <td><img src="/{{ row[2] }}" width="80"></td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+</body>
+</html>
