@@ -41,6 +41,7 @@ body {
 .input-box {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .input-box input {
@@ -123,10 +124,12 @@ body {
 
 <div class="left">
 
-<form method="POST">
+<form method="POST" id="qr-form">
+    <input type="hidden" name="style" id="style-input" value="square">
+
     <div id="dynamic-input" class="input-box">
         <input type="text" name="data" placeholder="Enter text..." required>
-        <button type="submit">Generate</button>
+        
     </div>
 </form>
 
@@ -137,8 +140,19 @@ body {
     <div class="card" onclick="selectType(this,'instagram')">📷 Instagram</div>
     <div class="card" onclick="selectType(this,'whatsapp')">💬 WhatsApp</div>
     <div class="card" onclick="selectType(this,'wifi')">📶 WiFi</div>
+    <div class="card" onclick="selectType(this,'snapchat')">👻 Snapchat</div>
+    <div class="card" onclick="selectType(this,'facebook')">📘 Facebook</div>
 </div>
+<h3>Choose Style</h3>
+<div class="grid">
 
+    <!-- ADD THESE NEW STYLE BUTTONS -->
+<div class="card" onclick="selectType(this,'dot')">⚫ Dot</div>
+<div class="card" onclick="selectType(this,'heart')">❤️ Heart</div>
+<div class="card" onclick="selectType(this,'diamond')">✨ Diamond</div>
+<div class="card" onclick="selectType(this,'pixel')">🟦 Pixel</div>
+
+</div>
 </div>
 
 <div class="right">
@@ -162,10 +176,56 @@ function selectType(element, type) {
     element.classList.add('active');
 
     let container = document.getElementById("dynamic-input");
+    let styleInput = document.getElementById("style-input");
+    let form = document.getElementById("qr-form");
+
+    // 🧠 preserve input
+    let inputField = container.querySelector("input");
+    let value = inputField ? inputField.value : "";
+
+    // 🎨 STYLE BUTTONS
+    if (["dot","heart"].includes(type)) {
+        styleInput.value = type;
+
+        if (inputField) inputField.value = value;
+
+        form.submit();
+        return;
+    }
+
+    styleInput.value = "square";
 
     if (type === "website") {
         container.innerHTML = `
-            <input type="text" name="data" placeholder="Enter Website URL..." required>
+            <input type="text" name="data" value="${value}" placeholder="Enter Website URL..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "whatsapp") {
+        container.innerHTML = `
+            <input type="text" name="phone" value="${value}" placeholder="Enter Phone Number..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "instagram") {
+        container.innerHTML = `
+            <input type="text" name="instagram" value="${value}" placeholder="Enter Instagram Username..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "facebook") {
+        container.innerHTML = `
+            <input type="text" name="facebook" value="${value}" placeholder="Enter Facebook Username..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "snapchat") {
+        container.innerHTML = `
+            <input type="text" name="snapchat" value="${value}" placeholder="Enter Snapchat Username..." required>
             <button type="submit">Generate</button>
         `;
     }
@@ -174,34 +234,6 @@ function selectType(element, type) {
         container.innerHTML = `
             <input type="text" name="ssid" placeholder="WiFi Name" required>
             <input type="text" name="password" placeholder="WiFi Password" required>
-            <button type="submit">Generate</button>
-        `;
-    }
-
-    else if (type === "whatsapp") {
-        container.innerHTML = `
-            <input type="text" name="phone" placeholder="Enter Phone Number..." required>
-            <button type="submit">Generate</button>
-        `;
-    }
-
-    else if (type === "instagram") {
-        container.innerHTML = `
-            <input type="text" name="instagram" placeholder="Enter Instagram Username..." required>
-            <button type="submit">Generate</button>
-        `;
-    }
-
-    else if (type === "facebook") {
-        container.innerHTML = `
-            <input type="text" name="facebook" placeholder="Enter Facebook Username..." required>
-            <button type="submit">Generate</button>
-        `;
-    }
-
-    else {
-        container.innerHTML = `
-            <input type="text" name="data" placeholder="Enter ${type} link..." required>
             <button type="submit">Generate</button>
         `;
     }
