@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, redirect, jsonify
+from flask import Flask, render_template, request, send_file
 import os, sqlite3, qrcode
 from PIL import Image, ImageDraw
 from qrcode.image.styledpil import StyledPilImage
@@ -55,18 +55,25 @@ def build_qr_data(form):
         return f"https://wa.me/{form['phone']}"
 
     if 'instagram' in form:
-        username = form['instagram'].replace("@", "")
-        return f"https://instagram.com/{username}"
+        return f"https://instagram.com/{form['instagram'].replace('@','')}"
 
     if 'facebook' in form:
-        return f"https://facebook.com/{form['facebook']}"
+        fb = form['facebook']
+        return fb if fb.startswith("http") else f"https://facebook.com/{fb}"
+
+    if 'snapchat' in form:
+        return f"https://snapchat.com/add/{form['snapchat'].replace('@','')}"
 
     data = form.get("data", "")
 
-    if data and not data.startswith(("http://", "https://")):
+    # smarter URL handling
+    if data and "." in data and not data.startswith(("http://", "https://")):
         data = "https://" + data
 
-    return data or "https://google.com"
+    if not data:
+        return "https://example.com"
+
+    return data
 
 # -------- GENERATE QR --------
 def generate_qr(data, color, bg, style, frame, mode):
@@ -83,29 +90,41 @@ def generate_qr(data, color, bg, style, frame, mode):
 
     qr_data = f"{BASE_URL}/qr/{qr_id}" if mode == "track" else data
 
-    try:
-        drawer = CircleModuleDrawer() if style == "dots" else RoundedModuleDrawer()
+    # style
+    if style == "dot":
+        drawer = CircleModuleDrawer()
+    else:
+        drawer = RoundedModuleDrawer()
 
-        qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H)
-        qr.add_data(qr_data)
-        qr.make(fit=True)
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H)
+    qr.add_data(qr_data)
+    qr.make(fit=True)
 
-        img = qr.make_image(
-            image_factory=StyledPilImage,
-            module_drawer=drawer,
-            color_mask=SolidFillColorMask(
-                front_color=hex_to_rgb(color),
-                back_color=hex_to_rgb(bg)
-            )
-        ).convert("RGB")
+    img = qr.make_image(
+        image_factory=StyledPilImage,
+        module_drawer=drawer,
+        color_mask=SolidFillColorMask(
+            front_color=hex_to_rgb(color),
+            back_color=hex_to_rgb(bg)
+        )
+    ).convert("RGB")
 
-    except Exception as e:
-        print("Styled QR failed:", e)
-        img = qrcode.make(qr_data).convert("RGB")
+    # ❤️ SAFE HEART BACKGROUND
+    if style == "heart":
+        bg_img = Image.new("RGB", img.size, hex_to_rgb(bg))
+        draw_bg = ImageDraw.Draw(bg_img)
+
+        for x in range(0, img.size[0], 40):
+            for y in range(0, img.size[1], 40):
+                draw_bg.text((x, y), "❤", fill=(255, 200, 200))
+
+        bg_img.paste(img, (0, 0))
+        img = bg_img
 
     img.save(QR_PATH)
     add_logo(QR_PATH)
 
+    # frame
     im = Image.open(QR_PATH)
     draw = ImageDraw.Draw(im)
 
@@ -120,7 +139,6 @@ def generate_qr(data, color, bg, style, frame, mode):
 @app.route("/", methods=["GET","POST"])
 def home():
     if request.method == "POST":
-
         data = build_qr_data(request.form)
 
         generate_qr(
