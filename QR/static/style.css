@@ -30,7 +30,6 @@ h1 {
     color: white;
     cursor: pointer;
     border-radius: 8px;
-    transition: 0.3s;
 }
 
 .buttons button:hover {
@@ -45,12 +44,6 @@ input {
     border: none;
 }
 
-input[type="color"] {
-    width: 50px;
-    height: 40px;
-    cursor: pointer;
-}
-
 .generate {
     background: #22c55e;
     padding: 12px;
@@ -60,7 +53,6 @@ input[type="color"] {
     color: white;
     font-size: 16px;
     cursor: pointer;
-    transition: 0.3s;
 }
 
 .generate:hover {

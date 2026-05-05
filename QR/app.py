@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, send_file
 import os, sqlite3, qrcode
 from PIL import Image, ImageDraw
 from qrcode.image.styledpil import StyledPilImage
-from qrcode.image.styles.moduledrawers import CircleModuleDrawer, RoundedModuleDrawer, SquareModuleDrawer
+from qrcode.image.styles.moduledrawers import CircleModuleDrawer, RoundedModuleDrawer
 from qrcode.image.styles.colormasks import SolidFillColorMask
 
 app = Flask(__name__)
@@ -44,31 +44,6 @@ def add_logo(path):
     pos = ((qr.size[0]-80)//2, (qr.size[1]-80)//2)
     qr.paste(logo, pos, logo)
     qr.save(path)
-
-def recolor_qr(input_path, output_path, new_color, new_bg):
-    """Recolor existing QR without regenerating"""
-    try:
-        img = Image.open(input_path).convert("RGB")
-        pixels = img.load()
-        width, height = img.size
-        
-        old_color = (0, 0, 0)
-        old_bg = (255, 255, 255)
-        new_color_rgb = hex_to_rgb(new_color)
-        new_bg_rgb = hex_to_rgb(new_bg)
-        
-        for i in range(width):
-            for j in range(height):
-                r, g, b = pixels[i, j][:3]
-                # Check if pixel is black (dark) or white (light)
-                if (r + g + b) / 3 < 128:  # Dark = QR module
-                    pixels[i, j] = new_color_rgb
-                else:  # Light = Background
-                    pixels[i, j] = new_bg_rgb
-        
-        img.save(output_path)
-    except:
-        pass
 
 # -------- BUILD DATA --------
 def build_qr_data(form):
@@ -115,17 +90,11 @@ def generate_qr(data, color, bg, style, frame, mode):
 
     qr_data = f"{BASE_URL}/qr/{qr_id}" if mode == "track" else data
 
-    # 🎨 SELECT STYLE DRAWER
+    # style
     if style == "dot":
         drawer = CircleModuleDrawer()
-    elif style == "heart":
-        drawer = RoundedModuleDrawer()
-    elif style == "diamond":
-        drawer = CircleModuleDrawer()  # Diamond effect with post-processing
-    elif style == "pixel":
-        drawer = SquareModuleDrawer()  # Pixel/square style
     else:
-        drawer = SquareModuleDrawer()
+        drawer = RoundedModuleDrawer()
 
     qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H)
     qr.add_data(qr_data)
@@ -140,7 +109,7 @@ def generate_qr(data, color, bg, style, frame, mode):
         )
     ).convert("RGB")
 
-    # ❤️ HEART BACKGROUND PATTERN
+    # ❤️ SAFE HEART BACKGROUND
     if style == "heart":
         bg_img = Image.new("RGB", img.size, hex_to_rgb(bg))
         draw_bg = ImageDraw.Draw(bg_img)
@@ -151,10 +120,6 @@ def generate_qr(data, color, bg, style, frame, mode):
 
         bg_img.paste(img, (0, 0))
         img = bg_img
-
-    # 💎 DIAMOND EFFECT (rotated with expand to prevent trimming)
-    elif style == "diamond":
-        img = img.rotate(45, expand=True, fillcolor=hex_to_rgb(bg))
 
     img.save(QR_PATH)
     add_logo(QR_PATH)
@@ -174,28 +139,16 @@ def generate_qr(data, color, bg, style, frame, mode):
 @app.route("/", methods=["GET","POST"])
 def home():
     if request.method == "POST":
-        # Check if this is a recolor request (has style but no data changes)
-        has_data = any(key in request.form for key in ['data', 'phone', 'instagram', 'facebook', 'snapchat', 'ssid'])
-        
-        if has_data:
-            # Full QR generation
-            data = build_qr_data(request.form)
-            generate_qr(
-                data,
-                request.form.get("qr-color", "#000000"),
-                request.form.get("qr-bg", "#ffffff"),
-                request.form.get("style", "square"),
-                request.form.get("frame"),
-                request.form.get("mode")
-            )
-        else:
-            # Just recolor existing QR
-            recolor_qr(
-                QR_PATH,
-                QR_PATH,
-                request.form.get("qr-color", "#000000"),
-                request.form.get("qr-bg", "#ffffff")
-            )
+        data = build_qr_data(request.form)
+
+        generate_qr(
+            data,
+            request.form.get("color"),
+            request.form.get("bg"),
+            request.form.get("style"),
+            request.form.get("frame"),
+            request.form.get("mode")
+        )
 
     return render_template("index.html")
 

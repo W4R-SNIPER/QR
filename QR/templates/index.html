@@ -36,8 +36,6 @@ body {
     background: rgba(255,255,255,0.9);
     padding: 25px;
     border-radius: 16px;
-    display: flex;
-    flex-direction: column;
 }
 
 .input-box {
@@ -46,26 +44,20 @@ body {
     flex-wrap: wrap;
 }
 
-.input-box input[type="text"] {
+.input-box input {
     flex: 1;
     padding: 14px;
     border-radius: 10px;
     border: 1px solid #ddd;
 }
 
-.generate-btn {
+.input-box button {
     padding: 14px 22px;
     background: linear-gradient(90deg, #3b82f6, #6366f1);
     color: white;
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    transition: 0.3s;
-    font-weight: 500;
-}
-
-.generate-btn:hover {
-    opacity: 0.9;
 }
 
 .grid {
@@ -101,21 +93,13 @@ body {
 
 .qr-box {
     background: white;
-    padding: 40px;
+    padding: 30px;
     border-radius: 16px;
     border: 2px dashed #d1d5db;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 300px;
-    overflow: hidden;
 }
 
 .qr-box img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
+    width: 200px;
 }
 
 .download {
@@ -126,70 +110,6 @@ body {
     border: none;
     background: #6366f1;
     color: white;
-    cursor: pointer;
-    transition: 0.3s;
-    font-weight: 500;
-}
-
-.download:hover {
-    background: #4f46e5;
-}
-
-.color-section {
-    margin-top: auto;
-    padding: 15px;
-    background: #f0f4f8;
-    border-radius: 12px;
-}
-
-.color-section h4 {
-    margin: 0 0 12px 0;
-    color: #1e293b;
-    font-size: 14px;
-}
-
-.color-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 12px;
-}
-
-.color-input-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.color-input-group label {
-    font-size: 12px;
-    color: #475569;
-    flex: 1;
-}
-
-.color-input-group input[type="color"] {
-    width: 45px;
-    height: 35px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.apply-colors-btn {
-    width: 100%;
-    padding: 10px;
-    background: linear-gradient(90deg, #8b5cf6, #6366f1);
-    border: none;
-    border-radius: 8px;
-    color: white;
-    cursor: pointer;
-    font-weight: 500;
-    transition: 0.3s;
-    font-size: 13px;
-}
-
-.apply-colors-btn:hover {
-    opacity: 0.9;
 }
 </style>
 </head>
@@ -206,50 +126,33 @@ body {
 
 <form method="POST" id="qr-form">
     <input type="hidden" name="style" id="style-input" value="square">
-    <input type="hidden" name="qr-color" id="qr-color-input" value="#000000">
-    <input type="hidden" name="qr-bg" id="qr-bg-input" value="#ffffff">
-    <input type="hidden" name="selected-type" id="selected-type" value="website">
 
     <div id="dynamic-input" class="input-box">
-        <input type="text" name="data" id="main-input" placeholder="Enter text..." required>
-        <button type="submit" class="generate-btn">Generate</button>
+        <input type="text" name="data" placeholder="Enter text..." required>
+        
     </div>
 </form>
 
 <h3>Choose QR type</h3>
-<div class="grid" id="type-grid">
-    <div class="card active" onclick="selectType(this,'website')">🌍 Website</div>
+
+<div class="grid">
+    <div class="card" onclick="selectType(this,'website')">🌍 Website</div>
     <div class="card" onclick="selectType(this,'instagram')">📷 Instagram</div>
     <div class="card" onclick="selectType(this,'whatsapp')">💬 WhatsApp</div>
     <div class="card" onclick="selectType(this,'wifi')">📶 WiFi</div>
     <div class="card" onclick="selectType(this,'snapchat')">👻 Snapchat</div>
     <div class="card" onclick="selectType(this,'facebook')">📘 Facebook</div>
 </div>
-
 <h3>Choose Style</h3>
-<div class="grid" id="style-grid">
-    <div class="card active" onclick="selectStyle(this,'dot')">⚫ Dot</div>
-    <div class="card" onclick="selectStyle(this,'heart')">❤️ Heart</div>
-    <div class="card" onclick="selectStyle(this,'diamond')">✨ Diamond</div>
-    <div class="card" onclick="selectStyle(this,'pixel')">🟦 Pixel</div>
-</div>
+<div class="grid">
 
-<!-- COLOR CUSTOMIZATION AT BOTTOM -->
-<div class="color-section">
-    <h4>🎨 Customize Colors</h4>
-    <div class="color-controls">
-        <div class="color-input-group">
-            <label for="qr-color">QR Color</label>
-            <input type="color" id="qr-color" value="#000000">
-        </div>
-        <div class="color-input-group">
-            <label for="qr-bg">BG Color</label>
-            <input type="color" id="qr-bg" value="#ffffff">
-        </div>
-    </div>
-    <button type="button" class="apply-colors-btn" onclick="updateColors()">Apply Colors</button>
-</div>
+    <!-- ADD THESE NEW STYLE BUTTONS -->
+<div class="card" onclick="selectType(this,'dot')">⚫ Dot</div>
+<div class="card" onclick="selectType(this,'heart')">❤️ Heart</div>
+<div class="card" onclick="selectType(this,'diamond')">✨ Diamond</div>
+<div class="card" onclick="selectType(this,'pixel')">🟦 Pixel</div>
 
+</div>
 </div>
 
 <div class="right">
@@ -267,85 +170,74 @@ body {
 </div>
 
 <script>
-let selectedType = 'website';
-let selectedStyle = 'dot';
-
 function selectType(element, type) {
-    const typeGrid = document.getElementById('type-grid');
-    typeGrid.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
     element.classList.add('active');
-    selectedType = type;
 
     let container = document.getElementById("dynamic-input");
-    let inputField = container.querySelector("input[type='text']");
+    let styleInput = document.getElementById("style-input");
+    let form = document.getElementById("qr-form");
+
+    // 🧠 preserve input
+    let inputField = container.querySelector("input");
     let value = inputField ? inputField.value : "";
 
-    // Update form input based on type selection
-    switch(type) {
-        case "website":
-            inputField.placeholder = "Enter Website URL...";
-            inputField.name = "data";
-            break;
-        case "whatsapp":
-            inputField.placeholder = "Enter Phone Number...";
-            inputField.name = "phone";
-            break;
-        case "instagram":
-            inputField.placeholder = "Enter Instagram Username...";
-            inputField.name = "instagram";
-            break;
-        case "facebook":
-            inputField.placeholder = "Enter Facebook Username...";
-            inputField.name = "facebook";
-            break;
-        case "snapchat":
-            inputField.placeholder = "Enter Snapchat Username...";
-            inputField.name = "snapchat";
-            break;
-        case "wifi":
-            if (!container.querySelector("input[name='ssid']")) {
-                container.innerHTML = `
-                    <input type="text" name="ssid" placeholder="WiFi Name" required>
-                    <input type="text" name="password" placeholder="WiFi Password" required>
-                    <button type="submit" class="generate-btn">Generate</button>
-                `;
-            }
-            return;
+    // 🎨 STYLE BUTTONS
+    if (["dot","heart"].includes(type)) {
+        styleInput.value = type;
+
+        if (inputField) inputField.value = value;
+
+        form.submit();
+        return;
     }
 
-    // Reset to single input for non-wifi types
-    if (type !== "wifi") {
+    styleInput.value = "square";
+
+    if (type === "website") {
         container.innerHTML = `
-            <input type="text" name="${type === 'website' ? 'data' : type}" value="${value}" placeholder="Enter ${type}..." required>
-            <button type="submit" class="generate-btn">Generate</button>
+            <input type="text" name="data" value="${value}" placeholder="Enter Website URL..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "whatsapp") {
+        container.innerHTML = `
+            <input type="text" name="phone" value="${value}" placeholder="Enter Phone Number..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "instagram") {
+        container.innerHTML = `
+            <input type="text" name="instagram" value="${value}" placeholder="Enter Instagram Username..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "facebook") {
+        container.innerHTML = `
+            <input type="text" name="facebook" value="${value}" placeholder="Enter Facebook Username..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "snapchat") {
+        container.innerHTML = `
+            <input type="text" name="snapchat" value="${value}" placeholder="Enter Snapchat Username..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "wifi") {
+        container.innerHTML = `
+            <input type="text" name="ssid" placeholder="WiFi Name" required>
+            <input type="text" name="password" placeholder="WiFi Password" required>
+            <button type="submit">Generate</button>
         `;
     }
 }
-
-function selectStyle(element, style) {
-    const styleGrid = document.getElementById('style-grid');
-    styleGrid.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-    element.classList.add('active');
-    selectedStyle = style;
-    // Does NOT submit form - just updates selection
-}
-
-function updateColors() {
-    let qrColor = document.getElementById('qr-color').value;
-    let qrBg = document.getElementById('qr-bg').value;
-    
-    document.getElementById('qr-color-input').value = qrColor;
-    document.getElementById('qr-bg-input').value = qrBg;
-    
-    // Submit form with colors only - preserves QR state
-    document.getElementById('qr-form').submit();
-}
-
-// Intercept form submission to add style
-document.getElementById('qr-form').addEventListener('submit', function(e) {
-    document.getElementById('style-input').value = selectedStyle;
-    document.getElementById('selected-type').value = selectedType;
-});
 </script>
 
 </body>
