@@ -44,7 +44,7 @@ body {
     flex-wrap: wrap;
 }
 
-.input-box input {
+.input-box input[type="text"] {
     flex: 1;
     padding: 14px;
     border-radius: 10px;
@@ -57,6 +57,50 @@ body {
     color: white;
     border: none;
     border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.input-box button:hover {
+    opacity: 0.9;
+}
+
+.color-section {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f0f4f8;
+    border-radius: 12px;
+}
+
+.color-section h4 {
+    margin: 0 0 12px 0;
+    color: #1e293b;
+}
+
+.color-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.color-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.color-input-group label {
+    font-size: 14px;
+    color: #475569;
+    flex: 1;
+}
+
+.color-input-group input[type="color"] {
+    width: 50px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
     cursor: pointer;
 }
 
@@ -93,13 +137,21 @@ body {
 
 .qr-box {
     background: white;
-    padding: 30px;
+    padding: 40px;
     border-radius: 16px;
     border: 2px dashed #d1d5db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    overflow: hidden;
 }
 
 .qr-box img {
-    width: 200px;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
 }
 
 .download {
@@ -110,6 +162,12 @@ body {
     border: none;
     background: #6366f1;
     color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.download:hover {
+    background: #4f46e5;
 }
 </style>
 </head>
@@ -126,11 +184,29 @@ body {
 
 <form method="POST" id="qr-form">
     <input type="hidden" name="style" id="style-input" value="square">
+    <input type="hidden" name="qr-color" id="qr-color-input" value="#000000">
+    <input type="hidden" name="qr-bg" id="qr-bg-input" value="#ffffff">
 
     <div id="dynamic-input" class="input-box">
         <input type="text" name="data" id="main-input" placeholder="Enter text..." required>
     </div>
 </form>
+
+<!-- COLOR CUSTOMIZATION -->
+<div class="color-section">
+    <h4>🎨 Customize Colors</h4>
+    <div class="color-controls">
+        <div class="color-input-group">
+            <label for="qr-color">QR Modules Color</label>
+            <input type="color" id="qr-color" value="#000000">
+        </div>
+        <div class="color-input-group">
+            <label for="qr-bg">Background Color</label>
+            <input type="color" id="qr-bg" value="#ffffff">
+        </div>
+    </div>
+    <button type="button" class="input-box button" onclick="updateColors()" style="width: 100%; background: linear-gradient(90deg, #8b5cf6, #6366f1); border: none; border-radius: 10px; color: white; padding: 10px; cursor: pointer; font-weight: 500;">Apply Colors</button>
+</div>
 
 <h3>Choose QR type</h3>
 
@@ -168,7 +244,6 @@ body {
 
 <script>
 function selectType(element, type) {
-    // Only remove active from type cards
     const typeGrid = document.getElementById('type-grid');
     typeGrid.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
     element.classList.add('active');
@@ -222,7 +297,6 @@ function selectType(element, type) {
 }
 
 function selectStyle(element, style) {
-    // Only remove active from style cards
     const styleGrid = document.getElementById('style-grid');
     styleGrid.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
     element.classList.add('active');
@@ -232,6 +306,16 @@ function selectStyle(element, style) {
 
     styleInput.value = style;
     form.submit();
+}
+
+function updateColors() {
+    let qrColor = document.getElementById('qr-color').value;
+    let qrBg = document.getElementById('qr-bg').value;
+    
+    document.getElementById('qr-color-input').value = qrColor;
+    document.getElementById('qr-bg-input').value = qrBg;
+    
+    document.getElementById('qr-form').submit();
 }
 </script>
 

@@ -127,9 +127,9 @@ def generate_qr(data, color, bg, style, frame, mode):
         bg_img.paste(img, (0, 0))
         img = bg_img
 
-    # 💎 DIAMOND EFFECT (rotated squares)
+    # 💎 DIAMOND EFFECT (rotated with expand to prevent trimming)
     elif style == "diamond":
-        img = img.rotate(45, expand=False, fillcolor=hex_to_rgb(bg))
+        img = img.rotate(45, expand=True, fillcolor=hex_to_rgb(bg))
 
     img.save(QR_PATH)
     add_logo(QR_PATH)
@@ -153,8 +153,8 @@ def home():
 
         generate_qr(
             data,
-            request.form.get("color"),
-            request.form.get("bg"),
+            request.form.get("qr-color", "#000000"),
+            request.form.get("qr-bg", "#ffffff"),
             request.form.get("style"),
             request.form.get("frame"),
             request.form.get("mode")
