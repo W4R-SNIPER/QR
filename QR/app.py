@@ -45,6 +45,31 @@ def add_logo(path):
     qr.paste(logo, pos, logo)
     qr.save(path)
 
+def recolor_qr(input_path, output_path, new_color, new_bg):
+    """Recolor existing QR without regenerating"""
+    try:
+        img = Image.open(input_path).convert("RGB")
+        pixels = img.load()
+        width, height = img.size
+        
+        old_color = (0, 0, 0)
+        old_bg = (255, 255, 255)
+        new_color_rgb = hex_to_rgb(new_color)
+        new_bg_rgb = hex_to_rgb(new_bg)
+        
+        for i in range(width):
+            for j in range(height):
+                r, g, b = pixels[i, j][:3]
+                # Check if pixel is black (dark) or white (light)
+                if (r + g + b) / 3 < 128:  # Dark = QR module
+                    pixels[i, j] = new_color_rgb
+                else:  # Light = Background
+                    pixels[i, j] = new_bg_rgb
+        
+        img.save(output_path)
+    except:
+        pass
+
 # -------- BUILD DATA --------
 def build_qr_data(form):
 
@@ -149,16 +174,28 @@ def generate_qr(data, color, bg, style, frame, mode):
 @app.route("/", methods=["GET","POST"])
 def home():
     if request.method == "POST":
-        data = build_qr_data(request.form)
-
-        generate_qr(
-            data,
-            request.form.get("qr-color", "#000000"),
-            request.form.get("qr-bg", "#ffffff"),
-            request.form.get("style"),
-            request.form.get("frame"),
-            request.form.get("mode")
-        )
+        # Check if this is a recolor request (has style but no data changes)
+        has_data = any(key in request.form for key in ['data', 'phone', 'instagram', 'facebook', 'snapchat', 'ssid'])
+        
+        if has_data:
+            # Full QR generation
+            data = build_qr_data(request.form)
+            generate_qr(
+                data,
+                request.form.get("qr-color", "#000000"),
+                request.form.get("qr-bg", "#ffffff"),
+                request.form.get("style", "square"),
+                request.form.get("frame"),
+                request.form.get("mode")
+            )
+        else:
+            # Just recolor existing QR
+            recolor_qr(
+                QR_PATH,
+                QR_PATH,
+                request.form.get("qr-color", "#000000"),
+                request.form.get("qr-bg", "#ffffff")
+            )
 
     return render_template("index.html")
 
