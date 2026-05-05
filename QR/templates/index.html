@@ -128,14 +128,13 @@ body {
     <input type="hidden" name="style" id="style-input" value="square">
 
     <div id="dynamic-input" class="input-box">
-        <input type="text" name="data" placeholder="Enter text..." required>
-        
+        <input type="text" name="data" id="main-input" placeholder="Enter text..." required>
     </div>
 </form>
 
 <h3>Choose QR type</h3>
 
-<div class="grid">
+<div class="grid" id="type-grid">
     <div class="card" onclick="selectType(this,'website')">🌍 Website</div>
     <div class="card" onclick="selectType(this,'instagram')">📷 Instagram</div>
     <div class="card" onclick="selectType(this,'whatsapp')">💬 WhatsApp</div>
@@ -143,15 +142,13 @@ body {
     <div class="card" onclick="selectType(this,'snapchat')">👻 Snapchat</div>
     <div class="card" onclick="selectType(this,'facebook')">📘 Facebook</div>
 </div>
+
 <h3>Choose Style</h3>
-<div class="grid">
-
-    <!-- ADD THESE NEW STYLE BUTTONS -->
-<div class="card" onclick="selectType(this,'dot')">⚫ Dot</div>
-<div class="card" onclick="selectType(this,'heart')">❤️ Heart</div>
-<div class="card" onclick="selectType(this,'diamond')">✨ Diamond</div>
-<div class="card" onclick="selectType(this,'pixel')">🟦 Pixel</div>
-
+<div class="grid" id="style-grid">
+    <div class="card" onclick="selectStyle(this,'dot')">⚫ Dot</div>
+    <div class="card" onclick="selectStyle(this,'heart')">❤️ Heart</div>
+    <div class="card" onclick="selectStyle(this,'diamond')">✨ Diamond</div>
+    <div class="card" onclick="selectStyle(this,'pixel')">🟦 Pixel</div>
 </div>
 </div>
 
@@ -171,27 +168,17 @@ body {
 
 <script>
 function selectType(element, type) {
-
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    // Only remove active from type cards
+    const typeGrid = document.getElementById('type-grid');
+    typeGrid.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
     element.classList.add('active');
 
     let container = document.getElementById("dynamic-input");
     let styleInput = document.getElementById("style-input");
     let form = document.getElementById("qr-form");
 
-    // 🧠 preserve input
     let inputField = container.querySelector("input");
     let value = inputField ? inputField.value : "";
-
-    // 🎨 STYLE BUTTONS
-    if (["dot","heart"].includes(type)) {
-        styleInput.value = type;
-
-        if (inputField) inputField.value = value;
-
-        form.submit();
-        return;
-    }
 
     styleInput.value = "square";
 
@@ -201,35 +188,30 @@ function selectType(element, type) {
             <button type="submit">Generate</button>
         `;
     }
-
     else if (type === "whatsapp") {
         container.innerHTML = `
             <input type="text" name="phone" value="${value}" placeholder="Enter Phone Number..." required>
             <button type="submit">Generate</button>
         `;
     }
-
     else if (type === "instagram") {
         container.innerHTML = `
             <input type="text" name="instagram" value="${value}" placeholder="Enter Instagram Username..." required>
             <button type="submit">Generate</button>
         `;
     }
-
     else if (type === "facebook") {
         container.innerHTML = `
             <input type="text" name="facebook" value="${value}" placeholder="Enter Facebook Username..." required>
             <button type="submit">Generate</button>
         `;
     }
-
     else if (type === "snapchat") {
         container.innerHTML = `
             <input type="text" name="snapchat" value="${value}" placeholder="Enter Snapchat Username..." required>
             <button type="submit">Generate</button>
         `;
     }
-
     else if (type === "wifi") {
         container.innerHTML = `
             <input type="text" name="ssid" placeholder="WiFi Name" required>
@@ -237,6 +219,19 @@ function selectType(element, type) {
             <button type="submit">Generate</button>
         `;
     }
+}
+
+function selectStyle(element, style) {
+    // Only remove active from style cards
+    const styleGrid = document.getElementById('style-grid');
+    styleGrid.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    element.classList.add('active');
+
+    let styleInput = document.getElementById("style-input");
+    let form = document.getElementById("qr-form");
+
+    styleInput.value = style;
+    form.submit();
 }
 </script>
 

@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, send_file
 import os, sqlite3, qrcode
 from PIL import Image, ImageDraw
 from qrcode.image.styledpil import StyledPilImage
-from qrcode.image.styles.moduledrawers import CircleModuleDrawer, RoundedModuleDrawer
+from qrcode.image.styles.moduledrawers import CircleModuleDrawer, RoundedModuleDrawer, SquareModuleDrawer
 from qrcode.image.styles.colormasks import SolidFillColorMask
 
 app = Flask(__name__)
@@ -90,11 +90,17 @@ def generate_qr(data, color, bg, style, frame, mode):
 
     qr_data = f"{BASE_URL}/qr/{qr_id}" if mode == "track" else data
 
-    # style
+    # 🎨 SELECT STYLE DRAWER
     if style == "dot":
         drawer = CircleModuleDrawer()
-    else:
+    elif style == "heart":
         drawer = RoundedModuleDrawer()
+    elif style == "diamond":
+        drawer = CircleModuleDrawer()  # Diamond effect with post-processing
+    elif style == "pixel":
+        drawer = SquareModuleDrawer()  # Pixel/square style
+    else:
+        drawer = SquareModuleDrawer()
 
     qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H)
     qr.add_data(qr_data)
@@ -109,7 +115,7 @@ def generate_qr(data, color, bg, style, frame, mode):
         )
     ).convert("RGB")
 
-    # ❤️ SAFE HEART BACKGROUND
+    # ❤️ HEART BACKGROUND PATTERN
     if style == "heart":
         bg_img = Image.new("RGB", img.size, hex_to_rgb(bg))
         draw_bg = ImageDraw.Draw(bg_img)
@@ -120,6 +126,10 @@ def generate_qr(data, color, bg, style, frame, mode):
 
         bg_img.paste(img, (0, 0))
         img = bg_img
+
+    # 💎 DIAMOND EFFECT (rotated squares)
+    elif style == "diamond":
+        img = img.rotate(45, expand=False, fillcolor=hex_to_rgb(bg))
 
     img.save(QR_PATH)
     add_logo(QR_PATH)
