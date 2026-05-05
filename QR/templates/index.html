@@ -2,27 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QR Generator</title>
 
 <style>
 body {
     margin: 0;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Segoe UI';
     background: linear-gradient(135deg, #eef2ff, #f8fafc);
-}
-
-.header {
-    text-align: center;
-    padding: 30px;
-    font-size: 30px;
-    font-weight: 600;
-}
-
-.header span {
-    background: linear-gradient(90deg, #3b82f6, #6366f1);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
 }
 
 .container {
@@ -33,57 +19,9 @@ body {
 
 .left {
     flex: 2;
-    background: rgba(255,255,255,0.9);
-    padding: 25px;
-    border-radius: 16px;
-}
-
-.input-box {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.input-box input {
-    flex: 1;
-    padding: 14px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-}
-
-.input-box button {
-    padding: 14px 22px;
-    background: linear-gradient(90deg, #3b82f6, #6366f1);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.card {
-    padding: 16px;
+    background: white;
+    padding: 20px;
     border-radius: 12px;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    cursor: pointer;
-    transition: 0.25s;
-    font-weight: 500;
-}
-
-.card:hover {
-    background: #eff6ff;
-}
-
-.card.active {
-    background: #3b82f6;
-    color: white;
 }
 
 .right {
@@ -91,150 +29,83 @@ body {
     text-align: center;
 }
 
-.qr-box {
-    background: white;
-    padding: 30px;
-    border-radius: 16px;
-    border: 2px dashed #d1d5db;
+.card {
+    padding: 12px;
+    border: 1px solid #ddd;
+    margin: 5px;
+    cursor: pointer;
 }
 
-.qr-box img {
-    width: 200px;
-}
-
-.download {
-    margin-top: 15px;
-    padding: 14px;
-    width: 100%;
-    border-radius: 10px;
-    border: none;
-    background: #6366f1;
+.card.active {
+    background: #3b82f6;
     color: white;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-    <span>Create QR codes</span>
-</div>
-
 <div class="container">
 
 <div class="left">
 
 <form method="POST" id="qr-form">
-    <input type="hidden" name="style" id="style-input" value="square">
 
-    <div id="dynamic-input" class="input-box">
-        <input type="text" name="data" placeholder="Enter text..." required>
-        
-    </div>
+<input type="hidden" name="style" id="style-input" value="square">
+
+<div id="dynamic-input">
+<input type="text" name="data" placeholder="Enter text" required>
+</div>
+
+<button type="submit">Generate QR</button>
+
 </form>
 
-<h3>Choose QR type</h3>
-
+<h3>QR Types</h3>
 <div class="grid">
-    <div class="card" onclick="selectType(this,'website')">🌍 Website</div>
-    <div class="card" onclick="selectType(this,'instagram')">📷 Instagram</div>
-    <div class="card" onclick="selectType(this,'whatsapp')">💬 WhatsApp</div>
-    <div class="card" onclick="selectType(this,'wifi')">📶 WiFi</div>
-    <div class="card" onclick="selectType(this,'snapchat')">👻 Snapchat</div>
-    <div class="card" onclick="selectType(this,'facebook')">📘 Facebook</div>
+<div class="card" onclick="selectType(this,'website')">Website</div>
+<div class="card" onclick="selectType(this,'instagram')">Instagram</div>
+<div class="card" onclick="selectType(this,'whatsapp')">WhatsApp</div>
+<div class="card" onclick="selectType(this,'wifi')">WiFi</div>
 </div>
-<h3>Choose Style</h3>
+
+<h3>Styles</h3>
 <div class="grid">
-
-    <!-- ADD THESE NEW STYLE BUTTONS -->
-<div class="card" onclick="selectType(this,'dot')">⚫ Dot</div>
-<div class="card" onclick="selectType(this,'heart')">❤️ Heart</div>
-<div class="card" onclick="selectType(this,'diamond')">✨ Diamond</div>
-<div class="card" onclick="selectType(this,'pixel')">🟦 Pixel</div>
-
+<div class="card" onclick="selectStyle(this,'dot')">Dot</div>
+<div class="card" onclick="selectStyle(this,'heart')">Heart</div>
+<div class="card" onclick="selectStyle(this,'diamond')">Diamond</div>
+<div class="card" onclick="selectStyle(this,'pixel')">Pixel</div>
 </div>
+
 </div>
 
 <div class="right">
-
-<div class="qr-box">
-    <img src="{{ url_for('static', filename='qr.png') }}?t={{ range(1,10000)|random }}">
-</div>
-
-<a href="/download">
-    <button class="download">Download QR Code</button>
-</a>
-
+<img src="{{ url_for('static', filename='qr.png') }}?t={{ range(1,10000)|random }}" width="200">
+<br><br>
+<a href="/download"><button>Download</button></a>
 </div>
 
 </div>
 
 <script>
-function selectType(element, type) {
+function selectStyle(el, style){
+    document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById("style-input").value = style;
+}
 
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-    element.classList.add('active');
+function selectType(el, type){
+    let box = document.getElementById("dynamic-input");
 
-    let container = document.getElementById("dynamic-input");
-    let styleInput = document.getElementById("style-input");
-    let form = document.getElementById("qr-form");
-
-    // 🧠 preserve input
-    let inputField = container.querySelector("input");
-    let value = inputField ? inputField.value : "";
-
-    // 🎨 STYLE BUTTONS
-    if (["dot","heart"].includes(type)) {
-        styleInput.value = type;
-
-        if (inputField) inputField.value = value;
-
-        form.submit();
-        return;
-    }
-
-    styleInput.value = "square";
-
-    if (type === "website") {
-        container.innerHTML = `
-            <input type="text" name="data" value="${value}" placeholder="Enter Website URL..." required>
-            <button type="submit">Generate</button>
-        `;
-    }
-
-    else if (type === "whatsapp") {
-        container.innerHTML = `
-            <input type="text" name="phone" value="${value}" placeholder="Enter Phone Number..." required>
-            <button type="submit">Generate</button>
-        `;
-    }
-
-    else if (type === "instagram") {
-        container.innerHTML = `
-            <input type="text" name="instagram" value="${value}" placeholder="Enter Instagram Username..." required>
-            <button type="submit">Generate</button>
-        `;
-    }
-
-    else if (type === "facebook") {
-        container.innerHTML = `
-            <input type="text" name="facebook" value="${value}" placeholder="Enter Facebook Username..." required>
-            <button type="submit">Generate</button>
-        `;
-    }
-
-    else if (type === "snapchat") {
-        container.innerHTML = `
-            <input type="text" name="snapchat" value="${value}" placeholder="Enter Snapchat Username..." required>
-            <button type="submit">Generate</button>
-        `;
-    }
-
-    else if (type === "wifi") {
-        container.innerHTML = `
-            <input type="text" name="ssid" placeholder="WiFi Name" required>
-            <input type="text" name="password" placeholder="WiFi Password" required>
-            <button type="submit">Generate</button>
+    if(type==="wifi"){
+        box.innerHTML = `
+        <input name="ssid" placeholder="WiFi Name" required>
+        <input name="password" placeholder="Password" required>
         `;
     }
 }
