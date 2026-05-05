@@ -1,23 +1,17 @@
-from flask import Flask, render_template, request, send_file, redirect
+from flask import Flask, render_template, request, send_file
 import os, sqlite3, qrcode
 from PIL import Image, ImageDraw
 from qrcode.image.styledpil import StyledPilImage
-from qrcode.image.styles.moduledrawers import (
-    CircleModuleDrawer,
-    RoundedModuleDrawer,
-    SquareModuleDrawer,
-    GappedSquareModuleDrawer
-)
+from qrcode.image.styles.moduledrawers import CircleModuleDrawer, RoundedModuleDrawer
 from qrcode.image.styles.colormasks import SolidFillColorMask
 
 app = Flask(__name__)
 
-BASE_URL = "http://127.0.0.1:5000"
+BASE_URL = "https://qr-am95.onrender.com"
 QR_PATH = "static/qr.png"
 LOGO_PATH = "static/logos/logo.png"
 
 os.makedirs("static", exist_ok=True)
-os.makedirs("static/logos", exist_ok=True)
 
 # -------- DATABASE --------
 def init_db():
@@ -72,6 +66,7 @@ def build_qr_data(form):
 
     data = form.get("data", "")
 
+    # smarter URL handling
     if data and "." in data and not data.startswith(("http://", "https://")):
         data = "https://" + data
 
@@ -95,16 +90,9 @@ def generate_qr(data, color, bg, style, frame, mode):
 
     qr_data = f"{BASE_URL}/qr/{qr_id}" if mode == "track" else data
 
-    # STYLE DRAWER
+    # style
     if style == "dot":
         drawer = CircleModuleDrawer()
-
-    elif style == "diamond":
-        drawer = GappedSquareModuleDrawer()
-
-    elif style == "pixel":
-        drawer = SquareModuleDrawer()
-
     else:
         drawer = RoundedModuleDrawer()
 
@@ -121,14 +109,14 @@ def generate_qr(data, color, bg, style, frame, mode):
         )
     ).convert("RGB")
 
-    # ❤️ HEART BACKGROUND
+    # ❤️ SAFE HEART BACKGROUND
     if style == "heart":
         bg_img = Image.new("RGB", img.size, hex_to_rgb(bg))
         draw_bg = ImageDraw.Draw(bg_img)
 
-        for x in range(0, img.size[0], 30):
-            for y in range(0, img.size[1], 30):
-                draw_bg.text((x, y), "❤", fill=(255, 180, 180))
+        for x in range(0, img.size[0], 40):
+            for y in range(0, img.size[1], 40):
+                draw_bg.text((x, y), "❤", fill=(255, 200, 200))
 
         bg_img.paste(img, (0, 0))
         img = bg_img
@@ -136,7 +124,7 @@ def generate_qr(data, color, bg, style, frame, mode):
     img.save(QR_PATH)
     add_logo(QR_PATH)
 
-    # FRAME
+    # frame
     im = Image.open(QR_PATH)
     draw = ImageDraw.Draw(im)
 
@@ -167,23 +155,6 @@ def home():
 @app.route("/download")
 def download():
     return send_file(QR_PATH, as_attachment=True)
-
-# 🔥 TRACKING ROUTE
-@app.route("/qr/<int:qr_id>")
-def track(qr_id):
-    conn = sqlite3.connect("database.db")
-    c = conn.cursor()
-
-    c.execute("UPDATE qr_codes SET scans = scans + 1 WHERE id=?", (qr_id,))
-    c.execute("SELECT data FROM qr_codes WHERE id=?", (qr_id,))
-    result = c.fetchone()
-
-    conn.commit()
-    conn.close()
-
-    if result:
-        return redirect(result[0])
-    return "Invalid QR"
 
 if __name__ == "__main__":
     app.run(debug=True)
