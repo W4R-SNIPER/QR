@@ -1,120 +1,3 @@
-<<<<<<< HEAD
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>QR Generator</title>
-
-<style>
-body {
-    margin: 0;
-    font-family: 'Segoe UI';
-    background: linear-gradient(135deg, #eef2ff, #f8fafc);
-}
-
-.container {
-    display: flex;
-    padding: 20px;
-    gap: 20px;
-}
-
-.left {
-    flex: 2;
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-}
-
-.right {
-    flex: 1;
-    text-align: center;
-}
-
-.card {
-    padding: 12px;
-    border: 1px solid #ddd;
-    margin: 5px;
-    cursor: pointer;
-}
-
-.card.active {
-    background: #3b82f6;
-    color: white;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(2,1fr);
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-<div class="left">
-
-<form method="POST" id="qr-form">
-
-<input type="hidden" name="style" id="style-input" value="square">
-
-<div id="dynamic-input">
-<input type="text" name="data" placeholder="Enter text" required>
-</div>
-
-<button type="submit">Generate QR</button>
-
-</form>
-
-<h3>QR Types</h3>
-<div class="grid">
-<div class="card" onclick="selectType(this,'website')">Website</div>
-<div class="card" onclick="selectType(this,'instagram')">Instagram</div>
-<div class="card" onclick="selectType(this,'whatsapp')">WhatsApp</div>
-<div class="card" onclick="selectType(this,'wifi')">WiFi</div>
-</div>
-
-<h3>Styles</h3>
-<div class="grid">
-<div class="card" onclick="selectStyle(this,'dot')">Dot</div>
-<div class="card" onclick="selectStyle(this,'heart')">Heart</div>
-<div class="card" onclick="selectStyle(this,'diamond')">Diamond</div>
-<div class="card" onclick="selectStyle(this,'pixel')">Pixel</div>
-</div>
-
-</div>
-
-<div class="right">
-<img src="{{ url_for('static', filename='qr.png') }}?t={{ range(1,10000)|random }}" width="200">
-<br><br>
-<a href="/download"><button>Download</button></a>
-</div>
-
-</div>
-
-<script>
-function selectStyle(el, style){
-    document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById("style-input").value = style;
-}
-
-function selectType(el, type){
-    let box = document.getElementById("dynamic-input");
-
-    if(type==="wifi"){
-        box.innerHTML = `
-        <input name="ssid" placeholder="WiFi Name" required>
-        <input name="password" placeholder="Password" required>
-        `;
-    }
-}
-</script>
-
-</body>
-</html>
-=======
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -158,6 +41,7 @@ body {
 .input-box {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .input-box input {
@@ -240,10 +124,12 @@ body {
 
 <div class="left">
 
-<form method="POST">
+<form method="POST" id="qr-form">
+    <input type="hidden" name="style" id="style-input" value="square">
+
     <div id="dynamic-input" class="input-box">
         <input type="text" name="data" placeholder="Enter text..." required>
-        <button type="submit">Generate</button>
+        
     </div>
 </form>
 
@@ -254,8 +140,19 @@ body {
     <div class="card" onclick="selectType(this,'instagram')">📷 Instagram</div>
     <div class="card" onclick="selectType(this,'whatsapp')">💬 WhatsApp</div>
     <div class="card" onclick="selectType(this,'wifi')">📶 WiFi</div>
+    <div class="card" onclick="selectType(this,'snapchat')">👻 Snapchat</div>
+    <div class="card" onclick="selectType(this,'facebook')">📘 Facebook</div>
 </div>
+<h3>Choose Style</h3>
+<div class="grid">
 
+    <!-- ADD THESE NEW STYLE BUTTONS -->
+<div class="card" onclick="selectType(this,'dot')">⚫ Dot</div>
+<div class="card" onclick="selectType(this,'heart')">❤️ Heart</div>
+<div class="card" onclick="selectType(this,'diamond')">✨ Diamond</div>
+<div class="card" onclick="selectType(this,'pixel')">🟦 Pixel</div>
+
+</div>
 </div>
 
 <div class="right">
@@ -279,10 +176,56 @@ function selectType(element, type) {
     element.classList.add('active');
 
     let container = document.getElementById("dynamic-input");
+    let styleInput = document.getElementById("style-input");
+    let form = document.getElementById("qr-form");
+
+    // 🧠 preserve input
+    let inputField = container.querySelector("input");
+    let value = inputField ? inputField.value : "";
+
+    // 🎨 STYLE BUTTONS
+    if (["dot","heart"].includes(type)) {
+        styleInput.value = type;
+
+        if (inputField) inputField.value = value;
+
+        form.submit();
+        return;
+    }
+
+    styleInput.value = "square";
 
     if (type === "website") {
         container.innerHTML = `
-            <input type="text" name="data" placeholder="Enter Website URL..." required>
+            <input type="text" name="data" value="${value}" placeholder="Enter Website URL..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "whatsapp") {
+        container.innerHTML = `
+            <input type="text" name="phone" value="${value}" placeholder="Enter Phone Number..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "instagram") {
+        container.innerHTML = `
+            <input type="text" name="instagram" value="${value}" placeholder="Enter Instagram Username..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "facebook") {
+        container.innerHTML = `
+            <input type="text" name="facebook" value="${value}" placeholder="Enter Facebook Username..." required>
+            <button type="submit">Generate</button>
+        `;
+    }
+
+    else if (type === "snapchat") {
+        container.innerHTML = `
+            <input type="text" name="snapchat" value="${value}" placeholder="Enter Snapchat Username..." required>
             <button type="submit">Generate</button>
         `;
     }
@@ -294,37 +237,8 @@ function selectType(element, type) {
             <button type="submit">Generate</button>
         `;
     }
-
-    else if (type === "whatsapp") {
-        container.innerHTML = `
-            <input type="text" name="phone" placeholder="Enter Phone Number..." required>
-            <button type="submit">Generate</button>
-        `;
-    }
-
-    else if (type === "instagram") {
-        container.innerHTML = `
-            <input type="text" name="instagram" placeholder="Enter Instagram Username..." required>
-            <button type="submit">Generate</button>
-        `;
-    }
-
-    else if (type === "facebook") {
-        container.innerHTML = `
-            <input type="text" name="facebook" placeholder="Enter Facebook Username..." required>
-            <button type="submit">Generate</button>
-        `;
-    }
-
-    else {
-        container.innerHTML = `
-            <input type="text" name="data" placeholder="Enter ${type} link..." required>
-            <button type="submit">Generate</button>
-        `;
-    }
 }
 </script>
 
 </body>
 </html>
->>>>>>> parent of e500f7e (Update index.html)
